@@ -205,6 +205,7 @@ exit(void) {
                 wakeup1(initproc);
         }
     }
+    
     //cprintf("Entered Exit 5\n");
     // Jump into the scheduler, never to return.
     proc->state = ZOMBIE;

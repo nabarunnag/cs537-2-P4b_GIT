@@ -100,9 +100,10 @@ int thread_create(void (*fn) (void *), void *arg)
         exit();
     }
     return rc;
+     
     
 }
-
+/*
 int lock(int *l)
 {
     while (xchg((uint*)l, 1) == 1)
@@ -117,4 +118,4 @@ int unlock(int *l)
 {
     *l = 0;
     return 0;
-}
+}*/

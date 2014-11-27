@@ -1,7 +1,6 @@
+/* test lock correctness */
 #include "types.h"
 #include "user.h"
-#include "fcntl.h"
-#include "x86.h"
 
 #undef NULL
 #define NULL ((void*)0)
@@ -9,7 +8,11 @@
 #define PGSIZE (4096)
 
 int ppid;
-volatile uint newfd = 0;
+int global = 0;
+int locks;
+int num_threads = 30;
+int loops = 1000;
+
 
 #define assert(x) if (x) {} else { \
    printf(1, "%s: %d ", __FILE__, __LINE__); \
@@ -23,31 +26,33 @@ void worker(void *arg_ptr);
 
 int
 main(int argc, char *argv[]) {
-    int testdd;
     ppid = getpid();
-    void *stack = malloc(PGSIZE * 2);
-    assert(stack != NULL);
-    if ((uint) stack % PGSIZE)
-        stack = stack + (4096 - (uint) stack % PGSIZE);
 
-    int fd = open("tmp", O_WRONLY | O_CREATE);
-    assert(fd == 3);
-    int clone_pid = clone(stack);
-    if (clone_pid == 0) {
-        worker(0);
+    int i;
+    for (i = 0; i < num_threads; i++) {
+        int thread_pid = thread_create(worker, 0);
+        assert(thread_pid > 0);
     }
-    assert(clone_pid > 0);
-    while (!newfd);
-    testdd = write(newfd, "goodbye\n", 8);
-    printf(1,"newfd before the assert = %d testdd = %d\n",newfd);
-    assert(testdd == 8);
+
+    for (i = 0; i < num_threads; i++) {
+        int join_pid = join();
+        assert(join_pid > 0);
+    }
+
+    assert(global == num_threads * loops);
     printf(1, "TEST PASSED\n");
     exit();
 }
 
 void
 worker(void *arg_ptr) {
-    assert(write(3, "hello\n", 6) == 6);
-    xchg(&newfd, open("tmp2", O_WRONLY | O_CREATE));
-    exit();
+    int i, j, tmp;
+    for (i = 0; i < loops; i++) {
+        lock(&locks);
+        tmp = global;
+        for (j = 0; j < 50; j++); // take some time
+        global = tmp + 1;
+        unlock(&locks);
+    }
+    return;
 }

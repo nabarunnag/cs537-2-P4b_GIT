@@ -43,8 +43,8 @@ int atoi(const char*);
 //Naba
 int clone(void* stack);
 int join(void);
-int lock(int *l);
-int unlock(int *l);
+int lock(int* l);
+int unlock(int* l);
 int thread_create(void (*fn) (void *), void *arg);
 #endif // _USER_H_
 
